@@ -28,10 +28,10 @@
 typedef struct event_handler{
   const char* evt_name;
   lua_CFunction on_register;
-  int (*on_event)(lua_State * L,const char* evt_name, int nargs,int nresults);
+  int (*on_event)(lua_State * L,const char* evt_name, int nargs);
 } event_handler;
 
-static int dt_lua_trigger_event(const char*event,int nargs,int nresults);
+static void queue_event(const char*event,int nargs);
 
 
 #if 0
@@ -111,31 +111,27 @@ static int register_keyed_event(lua_State* L) {
 }
 
 
-static int trigger_keyed_event(lua_State * L,const char* evt_name, int nargs,int nresults) {
+static int trigger_keyed_event(lua_State * L,const char* evt_name, int nargs) {
   // -1..-n are our args
   const int top_marker=lua_gettop(L);
   lua_getfield(L,LUA_REGISTRYINDEX,"dt_lua_event_data");
   lua_getfield(L,-1,evt_name);
   if(lua_isnil(L,-1)) {
     lua_pop(L,2+nargs);
-    if(nresults == LUA_MULTRET) return 0;
-    for(int i = 0 ; i < nresults ; i++) lua_pushnil(L);
-    return nresults;
+    return 0;
   }
   const char*key=luaL_checkstring(L,-nargs-2); // first arg is the key itself
   lua_getfield(L,-1,key);
   if(lua_isnil(L,-1)) {
     lua_pop(L,2+nargs);
-    if(nresults == LUA_MULTRET) return 0;
-    for(int i = 0 ; i < nresults ; i++) lua_pushnil(L);
-    return nresults;
+    return  0;
   }
   // prepare the call
   lua_insert(L,top_marker-nargs+1);
   lua_pushstring(L,evt_name);// param 1 is the event
   lua_insert(L,top_marker-nargs+2);
   lua_pop(L,2);
-  return dt_lua_do_chunk(L,nargs+1,nresults);
+  return dt_lua_do_chunk(L,nargs+1,0);
 }
 
 /*
@@ -148,8 +144,10 @@ static gboolean shortcut_callback(GtkAccelGroup *accel_group,
     GdkModifierType modifier,
     gpointer p)
 {
+  dt_lua_lock();
   lua_pushstring(darktable.lua_state,(char*)p);
-  dt_lua_trigger_event("shortcut",1,0);
+  queue_event("shortcut",1);
+  dt_lua_unlock();
   return TRUE;
 }
 
@@ -198,22 +196,20 @@ static int register_multiinstance_event(lua_State* L) {
   return 0;
 }
 
-static int trigger_multiinstance_event(lua_State * L,const char* evt_name, int nargs,int nresults) {
+static int trigger_multiinstance_event(lua_State * L,const char* evt_name, int nargs) {
   // -1..-n are our args
   const int top_marker=lua_gettop(L);
   lua_getfield(L,LUA_REGISTRYINDEX,"dt_lua_event_data");
   lua_getfield(L,-1,evt_name);
   if(lua_isnil(L,-1)) {
     lua_pop(L,2+nargs);
-    if(nresults == LUA_MULTRET) return 0;
-    for(int i = 0 ; i < nresults ; i++) lua_pushnil(L);
-    return nresults;
+    return 0;
   }
   lua_remove(L,-2);
 
 
   lua_pushnil(L);  /* first key */
-  int result = 0;
+  int nresult = 0;
   while (lua_next(L, top_marker +1) != 0) {
     /* uses 'key' (at index -2) and 'value' (at index -1)  value is the function to call*/
     // prepare the call
@@ -221,14 +217,9 @@ static int trigger_multiinstance_event(lua_State * L,const char* evt_name, int n
     for(int i = 0 ; i<nargs ;i++) { // event dependant parameters
       lua_pushvalue(L, top_marker -nargs +1 +i); 
     }
-    int tmp_result = dt_lua_do_chunk(L,nargs+1,nresults);
-    if(tmp_result > 0) {
-      lua_pushvalue(L,-(tmp_result+1));//push index on top
-      lua_remove(L,-(tmp_result+2));//remove old index still in stack
-    }
-    result += tmp_result;
+    nresult += dt_lua_do_chunk(L,nargs+1,0);
   }
-  return result;
+  return nresult;
 }
 
 #if 0
@@ -331,36 +322,36 @@ static int lua_register_event(lua_State *L) {
 
 }
 
-static int dt_lua_trigger_event_internal(const char*event,int nargs,int nresults) {
-  lua_getfield(darktable.lua_state,LUA_REGISTRYINDEX,"dt_lua_event_list");
-  if(lua_isnil(darktable.lua_state,-1)) {// events have been disabled
-    lua_pop(darktable.lua_state,1+nargs);
-    if(nresults== LUA_MULTRET) return 0;
-    for(int i=0; i<nresults;i++) 
-      lua_pushnil(darktable.lua_state);
-    return nresults;
-  }
-  lua_getfield(darktable.lua_state,-1,event);
-  event_handler * handler =  lua_touserdata(darktable.lua_state,-1);
-  lua_pop(darktable.lua_state,2);
-  const int result = handler->on_event(darktable.lua_state,event,nargs,nresults);
-  return result;
 
-}
-static int dt_lua_trigger_event(const char*event,int nargs,int nresults) {
-  int res;
-#ifdef _OPENMP
-#pragma omp critical(running_lua)
-#endif
-  {
-    res = dt_lua_trigger_event_internal(event,nargs,nresults);
+
+static int trigger_event(lua_State * L) {
+  const char * event = luaL_checkstring(L,-2);
+  int nargs = luaL_checknumber(L,-1);
+  lua_pop(L,2);
+  lua_getfield(L,LUA_REGISTRYINDEX,"dt_lua_event_list");
+  if(lua_isnil(L,-1)) {// events have been disabled
+    lua_settop(L,0);
+    return 0;
   }
-  return res;
+  lua_getfield(L,-1,event);
+  event_handler * handler =  lua_touserdata(L,-1);
+  lua_pop(L,2);
+  return handler->on_event(L,event,nargs);
 }
 
+
+static void queue_event(const char*event,int nargs) {
+  lua_pushcfunction(darktable.lua_state,trigger_event);
+  lua_insert(darktable.lua_state,-nargs -1);
+  lua_pushstring(darktable.lua_state,event);
+  lua_pushnumber(darktable.lua_state,nargs);
+  dt_lua_delay_chunk(darktable.lua_state,nargs+2);
+  
+}
 #if 0
 static void on_export_selection(gpointer instance,dt_control_image_enumerator_t * export_descriptor,
      gpointer user_data){
+  warning to self : add locking
   lua_State* L = darktable.lua_state;
   dt_control_export_t *export_data= (dt_control_export_t*)export_descriptor->data;
 
@@ -387,7 +378,7 @@ static void on_export_selection(gpointer instance,dt_control_image_enumerator_t 
   g_list_free(export_descriptor->index);
   export_descriptor->index =NULL;
 
-  dt_lua_trigger_event("pre-export",3,3);
+  queue_event("pre-export",3,3);
 
   // get the new storage data and the new storage
   luaL_getmetafield(L,-3,"__associated_object");
@@ -427,19 +418,25 @@ static void on_export_image_tmpfile(gpointer instance,
     int imgid,
     char *filename,
      gpointer user_data){
+  dt_lua_lock();
   luaA_push(darktable.lua_state,dt_lua_image_t,&imgid);
   lua_pushstring(darktable.lua_state,filename);
-  dt_lua_trigger_event("intermediate-export-image",2,0);
+  queue_event("intermediate-export-image",2);
+  dt_lua_unlock();
 }
 
 static void on_image_imported(gpointer instance,uint8_t id, gpointer user_data){
+  dt_lua_lock();
   luaA_push(darktable.lua_state,dt_lua_image_t,&id);
-  dt_lua_trigger_event("post-import-image",1,0);
+  queue_event("post-import-image",1);
+  dt_lua_unlock();
 }
 
 static void on_film_imported(gpointer instance,uint8_t id, gpointer user_data){
+  dt_lua_lock();
   luaA_push(darktable.lua_state,dt_lua_film_t,&id);
-  dt_lua_trigger_event("post-import-film",1,0);
+  queue_event("post-import-film",1);
+  dt_lua_unlock();
 }
 
 int dt_lua_init_events(lua_State *L) {

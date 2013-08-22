@@ -64,6 +64,7 @@ static lua_CFunction init_funcs[] =
   dt_lua_init_tags,
   dt_lua_init_events,
   dt_lua_init_film,
+  dt_lua_init_call,
   NULL
 };
 
@@ -73,6 +74,8 @@ void dt_lua_init_early(lua_State*L)
   if(!L)
     L= luaL_newstate();
   darktable.lua_state= L;
+  dt_lua_init_lock();
+  dt_lua_lock();
   luaL_openlibs(darktable.lua_state);
   luaA_open();
   dt_lua_push_darktable_lib(L);
@@ -89,6 +92,7 @@ void dt_lua_init_early(lua_State*L)
   /* modules need to be initialized before the are used */
   dt_lua_init_modules(L);
 
+  dt_lua_unlock();
 }
 
 
@@ -96,6 +100,7 @@ void dt_lua_init(lua_State*L,const int init_gui)
 {
   char tmp_path[PATH_MAX];
 
+  dt_lua_lock();
   // init the lua environment
   lua_CFunction* cur_type = init_funcs;
   while(*cur_type)
@@ -103,7 +108,6 @@ void dt_lua_init(lua_State*L,const int init_gui)
     (*cur_type)(L);
     cur_type++;
   }
-  dt_lua_push_darktable_lib(L);
   // build the table containing the configuration info
 
   lua_getglobal(L,"package");
@@ -141,6 +145,7 @@ void dt_lua_init(lua_State*L,const int init_gui)
     dt_lua_dofile(darktable.lua_state,tmp_path);
   }
 
+  dt_lua_unlock();
 }
 
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.sh

@@ -104,7 +104,13 @@
 <!-- Preferences and Settings Chapter -->
 <xi:include href="preferences/preferences.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
+<!-- Scripting with Lua -->
+<xi:include href="lua/lua.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
 <!-- Special Topics Chapter -->
 <xi:include href="topics/topics.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+<!-- The Index -->
+<index><title>Index</title></index>
 
 </book>

@@ -11,12 +11,17 @@
 			<keyword>view</keyword>
 		</keywordset>
 	</chapterinfo>
+        <indexterm class="startofrange" id="ix.lighttable_chapter">
+           <primary>lighttable view</primary>
+        </indexterm>
 	<title>Lighttable</title>
 	<para>The lighttable is where you manage all your images, ratings, export and much more.</para>
-	<screenshot>
+        <para>
+              <screenshot>
 		<screeninfo>The lighttable view</screeninfo>
 		<graphic fileref="images/lighttable_view.png" scalefit="1" width="80%"></graphic>
-	</screenshot>
+              </screenshot>
+        </para>
 
 	<sect1 status="final"><title>Overview</title>
 		<para></para>
@@ -136,5 +141,6 @@
 
 	<!-- Panels -->
 	<xi:include href="panels/panels.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <indexterm class="endofrange" startref="ix.lighttable_chapter"/>
 </chapter>
 

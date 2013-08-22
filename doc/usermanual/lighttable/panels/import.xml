@@ -1,5 +1,18 @@
 <sect2 status="final" id="import"><title>Import</title>
-		 	 <para>This panel is for importing images into filmrolls. You can either import a complete folder,
+                        <indexterm>
+                             <primary>lighttable panels</primary>
+                             <secondary>import</secondary>
+                        </indexterm>
+                        <indexterm>
+                             <primary>import</primary>
+                        </indexterm>
+                        <indexterm>
+                             <primary>file import</primary>
+                        </indexterm>
+                        <indexterm>
+                             <primary>camera import</primary>
+                        </indexterm>
+		 	<para>This panel is for importing images into filmrolls. You can either import a complete folder,
       				by pressing <quote>import filmroll</quote>, or a single image with <quote>import single image</quote>. You can also import directly from a connected camera.
 		  	</para>
 
@@ -15,8 +28,10 @@
 	                                in that folder will show up in a filmroll with the same name as the imported folder. If single images are imported, they
 	                                will show up in the filmroll called <quote>single images</quote>.
 				</para>
-		
-				<graphic fileref="lighttable/images/panel_import.png" scalefit="1" width="60%" align="center"></graphic>
+
+                                <para>
+                         		<graphic fileref="lighttable/images/panel_import.png" scalefit="1" width="60%" align="center"></graphic>
+                                </para>
 
 				<para>Clicking on <quote>import single image</quote> or <quote>import filmroll</quote> opens a file selector dialog. Navigate through the filesystem,
                                       and select the item to import. On the lower part of the dialog, are some further import options. 

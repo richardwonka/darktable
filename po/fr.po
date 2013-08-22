@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DarkTable 0.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-08-16 20:51+0200\n"
-"PO-Revision-Date: 2013-08-16 20:53+0100\n"
+"POT-Creation-Date: 2013-08-19 11:23+0200\n"
+"PO-Revision-Date: 2013-08-19 11:26+0100\n"
 "Last-Translator: Pascal Obry <pascal@obry.net>\n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -904,41 +904,55 @@ msgstr "copie de %d image"
 msgid "copying %d images"
 msgstr "copie de %d images"
 
-#: ../src/control/jobs/control_jobs.c:1008
+#: ../src/control/jobs/control_jobs.c:975
+#, c-format
+msgid "creating local copie for %d image"
+msgid_plural "creating local copies for %d images"
+msgstr[0] "création de copie locale de %d image"
+msgstr[1] "création des copies locales de %d images"
+
+#: ../src/control/jobs/control_jobs.c:977
+#, c-format
+msgid "removing local copie for %d image"
+msgid_plural "removing local copies for %d images"
+msgstr[0] "suppression de la copie locale de %d image"
+msgstr[1] "suppression des copies locales de %d images"
+
+#: ../src/control/jobs/control_jobs.c:1039
 #, c-format
 msgid "failed to get parameters from storage module `%s', aborting export.."
 msgstr ""
 "impossible d'obtenir les paramètres du module de stockage `%s', exportation "
 "abandonnée..."
 
-#: ../src/control/jobs/control_jobs.c:1012
+#: ../src/control/jobs/control_jobs.c:1043
 #, c-format
 msgid "exporting %d image.."
 msgid_plural "exporting %d images.."
 msgstr[0] "exportation de %d image..."
 msgstr[1] "exportation de %d images..."
 
-#: ../src/control/jobs/control_jobs.c:1014
+#: ../src/control/jobs/control_jobs.c:1045
 #, c-format
 msgid "exporting %d image to %s"
 msgid_plural "exporting %d images to %s"
 msgstr[0] "exportation de %d image vers %s"
 msgstr[1] "exportation de %d images vers %s"
 
-#: ../src/control/jobs/control_jobs.c:1078
-#: ../src/control/jobs/control_jobs.c:1079 ../src/views/darkroom.c:472
+#: ../src/control/jobs/control_jobs.c:1109
+#: ../src/control/jobs/control_jobs.c:1110 ../src/views/darkroom.c:472
 #, c-format
 msgid "image `%s' is currently unavailable"
 msgstr "image '%s\" non disponible actuellement"
 
-#: ../src/control/jobs/control_jobs.c:1157
+#: ../src/control/jobs/control_jobs.c:1188
 #, c-format
 msgid "adding time offset to %d image"
 msgid_plural "adding time offset to %d images"
 msgstr[0] "ajout du décalage horaire à %d image"
 msgstr[1] "ajout du décalage horaire à %d images"
 
-#: ../src/control/jobs/control_jobs.c:1177
+#: ../src/control/jobs/control_jobs.c:1208
 #, c-format
 msgid "added time offset to %d image(s)"
 msgstr "décalage horaire ajouté à %d image(s)"
@@ -8019,7 +8033,14 @@ msgctxt "accel"
 msgid "redo"
 msgstr "refaire"
 
-#: ../src/develop/blend.c:1848 ../src/develop/blend.c:2069
+#. printf("%s: scale %f/%f %d\n", self->op, roi_out->scale, roi_in->scale, roi_out->scale == roi_in->scale);
+#. printf("xoffs %d, yoffs %d, out %d, %d, in %d, %d\n", xoffs, yoffs, roi_out->width, roi_out->height, roi_in->width, roi_in->height);
+#: ../src/develop/blend.c:1767 ../src/develop/blend.c:2053
+#, c-format
+msgid "skipped blending in module '%s': roi's do not match"
+msgstr "fusion ignorée dans le module '%s': paramètres incompatibles"
+
+#: ../src/develop/blend.c:1860 ../src/develop/blend.c:2098
 msgid "could not allocate buffer for blending"
 msgstr "impossible d'allouer la mémoire pour la fusion"
 
