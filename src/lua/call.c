@@ -50,7 +50,6 @@ int dt_lua_do_chunk(lua_State *L,int nargs,int nresults)
   }
   result= lua_gettop(L) -result;
 
-  lua_gc(L,LUA_GCCOLLECT,0);
   if(darktable.gui!=NULL) dt_control_queue_redraw();
   return result;
 }
@@ -62,7 +61,7 @@ int dt_lua_protect_call(lua_State *L,lua_CFunction func)
 }
 int dt_lua_dostring(lua_State *L,const char* command)
 {
-  if(luaL_loadstring(darktable.lua_state, command))
+  if(luaL_loadstring(L, command))
   {
     dt_print(DT_DEBUG_LUA,"LUA ERROR %s\n",lua_tostring(L,-1));
     lua_pop(L,1);
@@ -73,7 +72,7 @@ int dt_lua_dostring(lua_State *L,const char* command)
 
 int dt_lua_dofile(lua_State *L,const char* filename)
 {
-  if(luaL_loadfile(darktable.lua_state, filename))
+  if(luaL_loadfile(L, filename))
   {
     dt_print(DT_DEBUG_LUA,"LUA ERROR %s\n",lua_tostring(L,-1));
     lua_pop(L,1);
@@ -85,7 +84,7 @@ int dt_lua_dofile(lua_State *L,const char* filename)
 static gboolean poll_events(gpointer data)
 {
   dt_lua_lock();
-  long int my_id = GPOINTER_TO_INT(data);
+  int my_id = GPOINTER_TO_INT(data);
   lua_getfield(darktable.lua_state,LUA_REGISTRYINDEX,"dt_lua_delayed_events");
   lua_rawgeti(darktable.lua_state,-1,my_id);
   if(lua_isnoneornil(darktable.lua_state,-1)) {
@@ -97,8 +96,8 @@ static gboolean poll_events(gpointer data)
   lua_State * L = lua_tothread(darktable.lua_state,-1);
   dt_lua_do_chunk(L,lua_gettop(L) -1,0);
   /* L is finished, remove it from the stack */
-  lua_pop(darktable.lua_state,1);
-  luaL_unref(darktable.lua_state,-1,my_id);
+  luaL_unref(darktable.lua_state,-2,my_id);
+  lua_pop(darktable.lua_state,2);
   dt_lua_unlock();
   return FALSE;
 }
@@ -119,10 +118,8 @@ void dt_lua_delay_chunk(lua_State *L,int nargs) {
 int dt_lua_init_call(lua_State *L) {
   lua_newtable(L);
   lua_setfield(darktable.lua_state,LUA_REGISTRYINDEX,"dt_lua_delayed_events");
-  //g_idle_add(poll_events,NULL);
   return 0;
 }
-// closed on GC of the dt lib, usually when the lua interpreter closes
 
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.sh
 // vim: shiftwidth=2 expandtab tabstop=2 cindent
