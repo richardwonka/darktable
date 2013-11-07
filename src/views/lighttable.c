@@ -1115,11 +1115,11 @@ void expose_full_preview(dt_view_t *self, cairo_t *cr, int32_t width, int32_t he
   const int frows = 5, fcols = 5;
   if(display_focus)
   {
-    gboolean from_cache = FALSE;
-    char filename[2048];
-    dt_image_full_path(lib->full_preview_id, filename, 2048, &from_cache);
     if(lib->full_res_thumb_id != lib->full_preview_id)
     {
+      gboolean from_cache = FALSE;
+      char filename[2048];
+      dt_image_full_path(lib->full_preview_id, filename, 2048, &from_cache);
       if(lib->full_res_thumb)
       {
         free(lib->full_res_thumb);
@@ -1203,7 +1203,7 @@ void expose_full_preview(dt_view_t *self, cairo_t *cr, int32_t width, int32_t he
 #endif
   dt_view_image_expose(&(lib->image_over), lib->full_preview_id, cr, width, height, 1, pointerx, pointery, TRUE);
 
-  if(display_focus)
+  if(display_focus && (lib->full_res_thumb_id == lib->full_preview_id))
     dt_focus_draw_clusters(cr,
         width, height,
         lib->full_preview_id,
